@@ -1,14 +1,14 @@
 
 ![Logo](https://raw.githubusercontent.com/pangz-lab/verusd-web/main/icon.webp)
 # Verusd-Web
-A bi-directional Veurus node interface that enables receiving chain events and accepting request from and to <b>Verus</b> chain. 
+Bi-directional Verus node interface that enables receiving chain events and accepting request from and to <b>Verus</b> chain. 
 This fully supports all <b>PBaaS</b> chains.
 
 ## Introduction
 VerusdWeb can be configured to receive real-time blockchain events as well as sending RPC request to the Verus Blockchain.
 This works as a proxy-server with a straigthforward integration and minimal setup to the chain so you can use it in no time.
 
-Just setup the node and run. By default, you can access all publicly-safe rpc methods.
+Setup the node and run. By default, you can access all publicly-safe rpc methods.
 
 ## Use-cases
 #### Proxy Verus Node API for Bi-directional, Real-Time Communication:
@@ -220,13 +220,7 @@ vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, w
 
 
 ### [ Check the Samples ]
-<video controls width="1200">
-  <source src="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.webm" type="video/webm" />
-  <p>
-    Your browser doesn't support HTML video. Here is a
-    <a href="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.webm" download="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.webm">link to the video</a> instead.
-  </p>
-</video>
+<img src="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.gif" width="1000"/>
 
 <hr>
 
