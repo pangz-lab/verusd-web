@@ -221,7 +221,7 @@ vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, w
 
 ### [ Check the Samples ]
 <img src="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.gif" width="1000"/>
-
+<a href="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.webm">See the video here</a>
 <hr>
 
 # Support
