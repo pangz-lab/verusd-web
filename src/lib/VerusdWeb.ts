@@ -11,8 +11,6 @@ interface ZmqServer {
     port: number
 }
 
-
-
 interface LocalServerOptions {
     port: number
 }
@@ -51,11 +49,14 @@ export class VerusdWeb implements ServerInterface {
         this.wsServer = new WsServer();
         this.zmqEventsProvider = new ZmqEventsHandlerProvider(this.wsServer);
 
+        const zmqEventsHandler = this.zmqEventsProvider.e[0] !== undefined ?
+            this.zmqEventsProvider.eventsHandler :
+            undefined
         this.zmqClient = new ZmqClient(
             this.daemonConfig.zmq.host,
             this.daemonConfig.zmq.port,
             this.wsServer,
-            this.zmqEventsProvider.eventsHandler
+            zmqEventsHandler
         );
 
         if(config.clientHooks !== undefined) {
