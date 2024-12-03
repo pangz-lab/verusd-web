@@ -1,0 +1,64 @@
+{
+  "name": "verusd-web",
+  "version": "0.0.1",
+  "description": "Verus Coin library that enables a bi-directional communication with the Verus and other Verus PBaas chains.",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "test": "npx jest",
+    "build": "rm -rf ./dist && npx tsc",
+    "start": "node dist/src/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts"
+  },
+  "author": "Pangz",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.25",
+    "@types/ws": "^8.5.13",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "Verus",
+    "Verus Web",
+    "PBaaS",
+    "Verus coin",
+    "VRSC",
+    "zeromq",
+    "ZMQ",
+    "ZMQ client",
+    "verus zmq",
+    "verus client",
+    "client",
+    "messaging",
+    "verus messaging",
+    "verus zmq client"
+  ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "homepage": "https://github.com/pangz-lab/verusd-web#readme",
+  "bugs": {
+    "url": "https://github.com/pangz-lab/verusd-web/issues",
+    "email": "pangz.lab@gmail.com"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "helmet": "^8.0.0",
+    "verus-zmq-client": "^0.1.0-9",
+    "ws": "^8.18.0"
+  },
+  "icon": "https://raw.githubusercontent.com/pangz-lab/verusd-web/main/icon.png"
+}
