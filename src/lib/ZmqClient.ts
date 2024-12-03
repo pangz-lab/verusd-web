@@ -54,7 +54,7 @@ export class ZmqClient {
     }
 
     disconnect(): void {
-        this.client!.disconnect();
+        if(this.client != undefined) { this.client.disconnect(); }
     }
 
     private getDefaultEventHandler(): SubscriptionEventsHandler {

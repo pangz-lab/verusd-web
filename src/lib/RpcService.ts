@@ -17,34 +17,37 @@ export class RpcService {
     }
 
     static async sendChainRequest(method: string, params: Object): Promise<RpcResult> {
-        const payload = {"jsonrpc": "1.0", "id":"verusWebBridge", "method": method, "params": params}
-        // var status = 0;
-        // console.log("payload >>>");
-        // console.log(payload);
-        const response = await RpcService.sendRequest(
-            this.url,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': RpcService.apiToken
+        const payload = {"jsonrpc": "1.0", "id":"verusdWeb", "method": method, "params": params}
+        try {
+            const response = await RpcService.sendRequest(
+                this.url,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': RpcService.apiToken
+                    },
+                    body: JSON.stringify(payload),
                 },
-                body: JSON.stringify(payload),
-            },
-            RpcService.maxRetry
-        );
-        // status = response.status;
-        // console.log(
-        //     '⛓️‍💥 ' 
-        //     + (status != 200 ? '❗️ ' : '✅ ')
-        //     + "Chain RPC Request :" 
-        //     + method 
-        //     + ' / params: ' 
-        //     + JSON.stringify(params) 
-        //     + ' / result : ' 
-        //     + status
-        // );
-        return JSON.parse(await RpcService.processStreamResponse(response.body));
+                RpcService.maxRetry
+            );
+            // status = response.status;
+            // console.log(
+            //     '⛓️‍💥 ' 
+            //     + (status != 200 ? '❗️ ' : '✅ ')
+            //     + "Chain RPC Request :" 
+            //     + method 
+            //     + ' / params: ' 
+            //     + JSON.stringify(params) 
+            //     + ' / result : ' 
+            //     + status
+            // );
+            return JSON.parse(await RpcService.processStreamResponse(response.body));
+
+        } catch (e) {
+            console.log("❗️Failed to send the RPC request!")
+            throw e;
+        }
     }
 
     private static setProtocol(host: string): string {
@@ -101,8 +104,7 @@ export class RpcService {
                 if (done) { break; }
                 if (value) { chunks.push(value); }
             }
-
-            // Optionally, combine chunks into a single Uint8Array
+            
             const combined = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
             var offset = 0;
             for (const chunk of chunks) {

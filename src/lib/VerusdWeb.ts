@@ -5,6 +5,7 @@ import { WsServer } from "./WsServer";
 import { ZmqEventsHandlerProvider } from "./ZmqEventsHandlerProvider";
 import { RpcService } from "./RpcService";
 import { RpcServiceConfig } from "./RpcServiceConfig";
+import type { RouteConfig } from "./RestApiRoutesService";
 
 interface ZmqServer {
     host: string,
@@ -12,7 +13,11 @@ interface ZmqServer {
 }
 
 interface LocalServerOptions {
-    port: number
+    port: number,
+    customApiRoutes?: RouteConfig[],
+    apiToken?: string,
+    excludedMethods?: string[],
+    ws?: { clientHooks?: ClientMessageHookInterface[] }
 }
 
 interface DaemonConfig {
@@ -26,8 +31,6 @@ interface DaemonConfig {
 export interface VerusdWebConfig {
     daemonConfig: DaemonConfig
     localServerOptions: LocalServerOptions
-    clientHooks?: ClientMessageHookInterface[]
-    excludedMethods?: string[]
 }
 
 export class VerusdWeb implements ServerInterface {
@@ -36,12 +39,11 @@ export class VerusdWeb implements ServerInterface {
     private wsServer: WsServer;
     private daemonConfig: DaemonConfig;
     private localServerOptions: LocalServerOptions;
-    private clientHookInterface: ClientMessageHookInterface[] = [];
+    private clientHooks: ClientMessageHookInterface[] = [];
+    private customApiRoutes: RouteConfig[] = [];
     private zmqEventsProvider: ZmqEventsHandlerProvider;
 
-    get zmq(): ZmqEventsHandlerProvider {
-        return this.zmqEventsProvider!;
-    }
+    get zmq(): ZmqEventsHandlerProvider { return this.zmqEventsProvider; }
 
     constructor(config: VerusdWebConfig) {
         this.daemonConfig = config.daemonConfig;
@@ -52,6 +54,7 @@ export class VerusdWeb implements ServerInterface {
         const zmqEventsHandler = this.zmqEventsProvider.e[0] !== undefined ?
             this.zmqEventsProvider.eventsHandler :
             undefined
+
         this.zmqClient = new ZmqClient(
             this.daemonConfig.zmq.host,
             this.daemonConfig.zmq.port,
@@ -59,25 +62,18 @@ export class VerusdWeb implements ServerInterface {
             zmqEventsHandler
         );
 
-        if(config.clientHooks !== undefined) {
-            this.clientHookInterface = config.clientHooks;
-        }
-        this.httpServer = new HttpServer(
-            this.localServerOptions.port,
-            this.wsServer,
-            this.clientHookInterface
-        );
+        this.customApiRoutes = (config.localServerOptions.customApiRoutes !== undefined)? config.localServerOptions.customApiRoutes : [];
+        this.clientHooks = (config.localServerOptions.ws?.clientHooks !== undefined)? config.localServerOptions.ws.clientHooks : []
 
-        this.initDaemonRpcConnection(config?.excludedMethods ?? []);
-    }
+        this.httpServer = new HttpServer({
+            port: this.localServerOptions.port,
+            wsServer: this.wsServer,
+            clientHooks: this.clientHooks,
+            customApiRoutes: this.customApiRoutes,
+            apiToken: config.localServerOptions.apiToken ?? ''
+        });
 
-    private initDaemonRpcConnection(excludedMethods: string[]): void {
-        let host = (this.daemonConfig.port === undefined) ?
-            this.daemonConfig.host :
-            `${this.daemonConfig.host}:${this.daemonConfig.port}`;
-
-        RpcServiceConfig.set(excludedMethods);
-        RpcService.init(host, 'Basic ' + btoa(`${this.daemonConfig.user}:${this.daemonConfig.password}`));
+        this.initDaemonRpcConnection(config?.localServerOptions.excludedMethods ?? []);
     }
 
     open(): ServerInterface {
@@ -87,8 +83,17 @@ export class VerusdWeb implements ServerInterface {
     }
 
     close(): boolean {
-        this.zmqClient.disconnect();
-        this.httpServer.close();
+        if(this.zmqClient != undefined) { this.zmqClient.disconnect(); }
+        if(this.httpServer != undefined) { this.httpServer.close(); }
         return true;
+    }
+
+    private initDaemonRpcConnection(excludedMethods: string[]): void {
+        const host = (this.daemonConfig.port === undefined) ?
+            this.daemonConfig.host :
+            `${this.daemonConfig.host}:${this.daemonConfig.port}`;
+
+        RpcServiceConfig.set(excludedMethods);
+        RpcService.init(host, 'Basic ' + btoa(`${this.daemonConfig.user}:${this.daemonConfig.password}`));
     }
 }
