@@ -42,3 +42,4 @@ yarn.lock
 
 examples/index.ts
 src/index_sample.ts
+index_sample.ts
