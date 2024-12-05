@@ -1,6 +1,6 @@
 
 ![Logo](https://raw.githubusercontent.com/pangz-lab/verusd-web/main/icon.webp)
-# Verusd-Web
+# VerusdWeb
 Bi-directional Verus node interface that enables receiving chain events and accepting request from and to <b>Verus</b> chain. 
 This fully supports all <b>PBaaS</b> chains.
 
@@ -24,7 +24,7 @@ Setup the node and run. By default, you can access all publicly-safe rpc methods
 > Users can define their own API endpoints to extend functionality beyond what's provided by default Verus APIs, potentially using a utility class for ease of integration with existing RPC methods.
 
 #### Custom API(Like Caching and Calculations):
-> Creating a custom API that can cache blockchain data for performance or perform additional calculations based on blockchain data like liquidity metrics.
+> Creating a custom API that can cache blockchain data for performance or perform additional calculations based on blockchain data like liquidity metrics or other operations that requires heavy/extra computations before the request is returned.
 
 # Setup
 ## Verus Coin Setup
@@ -87,7 +87,7 @@ import { VerusdWeb } from 'verusd-web';
 ## Samples
 ### 1. Basic Setup
 - Run the `websocket` and `http` server at the same time.
-- Call the supported RPC methods.
+- Call the supported <a href="https://github.com/pangz-lab/verusd-web/blob/main/src/lib/RpcServiceConfig.ts#L2-L93">RPC methods</a>.
 ```typescript
 const vdWeb = new VerusdWeb({
     daemonConfig: {
@@ -104,7 +104,7 @@ const vdWeb = new VerusdWeb({
 try {
     vdWeb.open();
 } catch(e) {
-    console.error('Failed to open the connection');
+    console.error(`Error occurred!`);
     vdWeb.close();
 }
 ```
@@ -224,7 +224,7 @@ vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, w
 <a href="https://raw.githubusercontent.com/pangz-lab/verusd-web/main/samples.webm">See the video here</a>
 <hr>
 
-# Support
+# Issues/Inquiries
 For any issues or inquiries, you can raise a PR or contact me at
 | Contacts    |  - |
 |:-----:|:--------|
@@ -239,15 +239,18 @@ For any issues or inquiries, you can raise a PR or contact me at
 - ***Verus Wiki*** : https://wiki.verus.io/#!index.md
 - ***Bitcoin ZMQ*** :  https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md
 
-# License
-This library is released under the [MIT License](https://github.com/pangz-lab/verusd-web/blob/main/LICENSE).
-
 # Support Us
 Creating and maintaining a high-quality library is a labor of love that takes countless hours of coding, debugging, and community interaction. If this library has made your development easier, saved you time, or added value to your projects, consider supporting its ongoing growth and maintenance. Your contributions directly help keep this project alive, up-to-date, and evolving.
 
 Every donation, no matter the size, goes a long way in motivating the developer to dedicate time and energy to improving the library. With your support, We can continue fixing bugs, adding new features, and providing documentation and support for the community. By donating, you’re not just saying “thank you” for the work done so far—you’re investing in the library's future and helping it remain a reliable tool for developers worldwide.
 
 Let’s make this library even better, together! Consider donating to show your appreciation and ensure the continued development of this project. Your generosity fuels innovation and sustains the open-source ecosystem we all benefit from. Thank you for your support! 🍻
+
+### Buy me a Beer
+<a href="https://buymeacoffee.com/pangzlab">
+<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWtycDlxNjJ1MHUwbzY2MHI2ZmFxd3hwZDhqNHAyaDdlNXZubGtlMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/hXMGQqJFlIQMOjpsKC/giphy.webp"
+width="100" height="auto">
+</a>
 
 ### Donation Address
 ***Verus ID*** : 
@@ -272,6 +275,5 @@ RWCNjDd2HNRbJMdsYxN8ZDqyrS9fYNANaR
 0xa248d188725c3b78af7e7e8cf4cfb8469e46cf3b
 
 
-
-
-
+# License
+This library is released under the [MIT License](https://github.com/pangz-lab/verusd-web/blob/main/LICENSE).

@@ -1,6 +1,6 @@
 {
   "name": "verusd-web",
-  "version": "0.0.3-3",
+  "version": "0.0.4-1",
   "description": "Verus Coin library that enables a bi-directional communication with the Verus and other Verus PBaas chains.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
