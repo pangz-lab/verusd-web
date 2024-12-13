@@ -98,7 +98,7 @@ const vdWeb = new VerusdWeb({
         password: 'password',
         zmq: { host: 'localhost', port: 8900 }
     },
-    localServerOptions: { port: 3333 },
+    localServerConfig: { port: 3333 },
 });
 
 
@@ -154,7 +154,7 @@ const vdWeb = new VerusdWeb({
         password: 'password',
         zmq: { host: 'localhost', port: 8900 }
     },
-    localServerOptions: {
+    localServerConfig: {
         port: 3333,
         customApiRoutes: [
             { method: 'get', apiVersion: 1, route: 'tx/:tx', controller: txController },
@@ -188,7 +188,7 @@ const vdWeb = new VerusdWeb({
         password: 'password',
         zmq: { host: 'localhost', port: 8900 }
     },
-    localServerOptions: {
+    localServerConfig: {
         port: 3333,
     },
 });

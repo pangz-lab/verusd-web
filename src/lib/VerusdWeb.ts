@@ -12,7 +12,7 @@ interface ZmqServer {
     port: number
 }
 
-interface LocalServerOptions {
+interface LocalServerConfig {
     port: number,
     customApiRoutes?: RouteConfig[],
     apiToken?: string,
@@ -30,7 +30,7 @@ interface DaemonConfig {
 
 export interface VerusdWebConfig {
     daemonConfig: DaemonConfig
-    localServerOptions: LocalServerOptions
+    localServerConfig: LocalServerConfig
 }
 
 export class VerusdWeb implements ServerInterface {
@@ -38,7 +38,7 @@ export class VerusdWeb implements ServerInterface {
     private httpServer: HttpServer;
     private wsServer: WsServer;
     private daemonConfig: DaemonConfig;
-    private localServerOptions: LocalServerOptions;
+    private localServerConfig: LocalServerConfig;
     private clientHooks: ClientMessageHookInterface[] = [];
     private customApiRoutes: RouteConfig[] = [];
     private zmqEventsProvider: ZmqEventsHandlerProvider;
@@ -47,7 +47,7 @@ export class VerusdWeb implements ServerInterface {
 
     constructor(config: VerusdWebConfig) {
         this.daemonConfig = config.daemonConfig;
-        this.localServerOptions = config.localServerOptions;
+        this.localServerConfig = config.localServerConfig;
         this.wsServer = new WsServer();
         this.zmqEventsProvider = new ZmqEventsHandlerProvider(this.wsServer);
 
@@ -60,18 +60,18 @@ export class VerusdWeb implements ServerInterface {
             zmqEventsHandler
         );
 
-        this.customApiRoutes = (config.localServerOptions.customApiRoutes !== undefined)? config.localServerOptions.customApiRoutes : [];
-        this.clientHooks = (config.localServerOptions.ws?.clientHooks !== undefined)? config.localServerOptions.ws.clientHooks : []
+        this.customApiRoutes = (config.localServerConfig.customApiRoutes !== undefined)? config.localServerConfig.customApiRoutes : [];
+        this.clientHooks = (config.localServerConfig.ws?.clientHooks !== undefined)? config.localServerConfig.ws.clientHooks : []
 
         this.httpServer = new HttpServer({
-            port: this.localServerOptions.port,
+            port: this.localServerConfig.port,
             wsServer: this.wsServer,
             clientHooks: this.clientHooks,
             customApiRoutes: this.customApiRoutes,
-            apiToken: config.localServerOptions.apiToken ?? ''
+            apiToken: config.localServerConfig.apiToken ?? ''
         });
 
-        this.initDaemonRpcConnection(config?.localServerOptions.excludedMethods ?? []);
+        this.initDaemonRpcConnection(config?.localServerConfig.excludedMethods ?? []);
     }
 
     open(): ServerInterface {
