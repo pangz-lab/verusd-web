@@ -1,14 +1,14 @@
 
 ![Logo](https://raw.githubusercontent.com/pangz-lab/verusd-web/main/icon.webp)
 # VerusdWeb
-Bi-directional Verus node interface that enables receiving chain events and accepting request from and to <b>Verus</b> chain. 
-This fully supports all <b>PBaaS</b> chains.
+A bi-directional and lightweight Verus Blockchain interface that enables receiving chain events and accepting request to the <b>Verus</b> chain. 
+This fully supports all existing <b>PBaaS</b> chains.
 
 ## Introduction
-VerusdWeb can be configured to receive real-time blockchain events as well as sending RPC request to the Verus Blockchain.
-This works as a proxy-server with a straigthforward integration and minimal setup to the chain so you can use it in no time.
+<b>VerusdWeb</b> can be configured to receive real-time blockchain events as well as sending RPC request to the Verus Blockchain.
+This can work as a proxy-server with a straigthforward integration and minimal setup to the chain so you can run it wihout much effort.
 
-Setup the node and run. By default, you can access all publicly-safe rpc methods.
+Just setup the node and run. By default, you can access all publicly-safe rpc methods.
 
 ## Use-cases
 #### Proxy Verus Node API for Bi-directional, Real-Time Communication:
@@ -27,7 +27,7 @@ Setup the node and run. By default, you can access all publicly-safe rpc methods
 > Creating a custom API that can cache blockchain data for performance or perform additional calculations based on blockchain data like liquidity metrics or other operations that requires heavy/extra computations before the request is returned.
 
 # Setup
-## Verus Coin Setup
+## Verus Blockchain Setup
 Enable the ZMQ setting first by adding the following lines in the `VRSC.conf`.
 > 📑 ***Note*** <br>
 > You should have a Verus node running locally. <br>The address `127.0.0.1:8900` will serve as the ZMQ web server to be accessed by this library.
@@ -88,6 +88,7 @@ import { VerusdWeb } from 'verusd-web';
 ### 1. Basic Setup
 - Run the `websocket` and `http` server at the same time.
 - Call the supported <a href="https://github.com/pangz-lab/verusd-web/blob/main/src/lib/RpcServiceConfig.ts#L2-L93">RPC methods</a>.
+- Request can be sent thru the `websocket` or `http` endpoints.
 ```typescript
 const vdWeb = new VerusdWeb({
     daemonConfig: {
@@ -126,8 +127,8 @@ From the client, you can send a message in the following format.
 <hr/>
 
 ### 2. Create Custom API Routes(New Endpoints)
-- Create custom routes as many as you need.
-- Use `RpcService.sendChainRequest` to send an RPC request the chain. It's a built-in utilitu.
+- Create a custom routes.
+- Use `RpcService.sendChainRequest` to send an RPC request the chain. It's a built-in utility.
 - Routing feature uses `express` under the hood.
 ```typescript
 
@@ -164,17 +165,17 @@ const vdWeb = new VerusdWeb({
 ```
 
 ### Check the Result
-- Try to access using the browser.
-- Handled by `txController`
+- Try to access from the browser.
+- Request is handled by the custom function `txController`
 <pre>http://localhost:3333/api/v1/tx/91048ebae23b94f7542170bef4055bcf9d37c5b1206ca5db746e4a207174ab45</pre>
 
-- Handled by `blockController`
+- Request is handled by the custom function `blockController`
 <pre>http://localhost:3333/api/v1/block/1233353</pre>
 
 <hr/>
 
 ### 3. Listen to Blockchain Events
-- Listen when a new block or transaction is created.
+- Listen when a new block or transaction is emitted.
 - Run a custom script when an event occur.
 - Customize the data returned to the clients.
 ```typescript
@@ -192,20 +193,15 @@ const vdWeb = new VerusdWeb({
     },
 });
 
-vdWeb.zmq.onHashBlock(async (value: EventData, _topic?: string, _result?: Object, wsServer?: WsServer): Promise<Object> => {
+vdWeb.zmq.onHashBlock(async (value: EventData, _topic?: string, _result?: Object, prettyData?: any, wsServer?: WsServer): Promise<Object> => {
     console.log("[ On New Block ]");
-    const v = await RpcService.sendChainRequest('getblock', [value]);
-    wsServer?.send(v);
+    wsServer?.send(prettyData);
     return value;
 });
 
-
-vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, wsServer?: WsServer): Promise<Object> => {
+vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, prettyData?: any, wsServer?: WsServer): Promise<Object> => {
     console.log("[ On New Tx ]");
-    wsServer?.send(value);
-    const tx = await RpcService.sendChainRequest('getrawtransaction', [value]);
-    const v = await RpcService.sendChainRequest('decoderawtransaction', [tx.result]);
-    wsServer?.send(v);
+    wsServer?.send(prettyData);
     return value;
 });
 

@@ -51,9 +51,7 @@ export class VerusdWeb implements ServerInterface {
         this.wsServer = new WsServer();
         this.zmqEventsProvider = new ZmqEventsHandlerProvider(this.wsServer);
 
-        const zmqEventsHandler = this.zmqEventsProvider.e[0] !== undefined ?
-            this.zmqEventsProvider.eventsHandler :
-            undefined
+        const zmqEventsHandler = this.zmqEventsProvider.eventsHandler;
 
         this.zmqClient = new ZmqClient(
             this.daemonConfig.zmq.host,
