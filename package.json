@@ -1,9 +1,9 @@
 {
   "name": "verusd-web",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A Verus Blockchain library that enables a bi-directional communication with the Verus and other Verus PBaas chains.",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "npx jest",
     "build": "rm -rf ./dist && npx tsc",
@@ -60,7 +60,7 @@
   "dependencies": {
     "express": "^4.21.1",
     "helmet": "^8.0.0",
-    "verus-zmq-client": "^0.1.0-9",
+    "verus-zmq-client": "^0.1.0-12",
     "ws": "^8.18.0"
   },
   "icon": "https://raw.githubusercontent.com/pangz-lab/verusd-web/main/icon.webp"
