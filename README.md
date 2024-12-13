@@ -136,14 +136,14 @@ function txController(req: Request, res: Response) {
     const tx = req.params.tx;
     RpcService
         .sendChainRequest('getrawtransaction', [ tx ])
-        .then((v) => { res.send(v) });
+        .then((v: any) => { res.send(v) });
 }
 
 function blockController(req: Request, res: Response) {
     const block = req.params.block;
     RpcService
         .sendChainRequest('getblock', [ block ])
-        .then((v) => { res.send(v) });
+        .then((v: any) => { res.send(v) });
 }
 
 const vdWeb = new VerusdWeb({
