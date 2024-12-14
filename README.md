@@ -193,15 +193,21 @@ const vdWeb = new VerusdWeb({
     },
 });
 
-vdWeb.zmq.onHashBlock(async (value: EventData, _topic?: string, _result?: Object, prettyData?: any, wsServer?: WsServer): Promise<Object> => {
+vdWeb.zmq.onHashBlock(async (value: EventData, _topic?: string, _result?: Object, wsServer?: WsServer): Promise<Object> => {
     console.log("[ On New Block ]");
-    wsServer?.send(prettyData);
+    RpcService.sendChainRequest('getblock', [value]). then((decodedBlock: any) => {
+        wsServer?.send(decodedBlock);
+    });
     return value;
 });
 
-vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, prettyData?: any, wsServer?: WsServer): Promise<Object> => {
+vdWeb.zmq.onHashTx(async (value: EventData, _topic?: string, _result?: Object, wsServer?: WsServer): Promise<Object> => {
     console.log("[ On New Tx ]");
-    wsServer?.send(prettyData);
+    RpcService.sendChainRequest('getrawtransaction', [value]).then((tx) => {
+        RpcService.sendChainRequest('decoderawtransaction', [tx.result]). then((decodedTx: any) => {
+            wsServer?.send(decodedTx);
+        });
+    });
     return value;
 });
 

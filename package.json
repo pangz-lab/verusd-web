@@ -1,6 +1,6 @@
 {
   "name": "verusd-web",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A Verus Blockchain library that enables a bi-directional communication with the Verus and other Verus PBaas chains.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
