@@ -2,10 +2,11 @@ import { ServerInterface } from "./ServerInterface";
 import { HttpServer, type ClientMessageHookInterface } from "./HttpServer";
 import { ZmqClient } from "./ZmqClient";
 import { WsServer } from "./WsServer";
-import { ZmqEventsHandlerProvider } from "./ZmqEventsHandlerProvider";
+import { ZmqEventsHandlerProvider, type ZmqObjectProviderInterface } from "./ZmqEventsHandlerProvider";
 import { RpcService } from "./RpcService";
 import { RpcServiceConfig } from "./RpcServiceConfig";
 import type { RouteConfig } from "./RestApiRoutesService";
+import { WsClient } from "./WsClient";
 
 interface ZmqServer {
     host: string,
@@ -28,12 +29,76 @@ interface DaemonConfig {
     zmq: ZmqServer
 }
 
+export interface VerusdLocalConfig {
+    daemon: DaemonConfig
+    localServer: LocalServerConfig
+}
+
+export interface VerusdProxyConfig {
+    url: string,
+    apiToken?: string,
+}
+
 export interface VerusdWebConfig {
-    daemonConfig: DaemonConfig
-    localServerConfig: LocalServerConfig
+    config: VerusdLocalConfig | VerusdProxyConfig
 }
 
 export class VerusdWeb implements ServerInterface {
+    private verusdWebServer: ServerInterface | ZmqObjectProviderInterface | undefined;
+    private isLocalServer = false;
+
+    get localServer(): VerusdWebLocalServer {
+        if(!this.isLocalServer) {
+            throw new Error("VerusdWeb is not configured as a local server instance.");
+        }
+        return this.verusdWebServer as VerusdWebLocalServer;
+    }
+    
+    get proxyServer(): VerusdWebProxyServer {
+        if(this.isLocalServer) {
+            throw new Error("VerusdWeb is not configured as a proxy server instance.");
+        }
+        return this.verusdWebServer as VerusdWebProxyServer;
+    }
+
+    constructor(c: VerusdWebConfig) {
+        this.isLocalServer = c.config.hasOwnProperty('daemon');
+        if(this.isLocalServer) {
+            this.verusdWebServer = new VerusdWebLocalServer(c.config as VerusdLocalConfig);
+            return;
+        }
+
+        this.verusdWebServer = new VerusdWebProxyServer(c.config as VerusdProxyConfig);
+    }
+
+    open(): ServerInterface {
+        (this.verusdWebServer as ServerInterface).open();
+        return this;
+    }
+
+    close(): boolean {
+        (this.verusdWebServer as ServerInterface).close();
+        return true;
+    }
+}
+
+class VerusdWebProxyServer implements ServerInterface {
+    private wsClient: WsClient;
+    constructor(config: VerusdProxyConfig) {
+        this.wsClient = new WsClient(config.url);
+    }
+
+    open(): ServerInterface {
+        this.wsClient.open();
+        return this;
+    }
+
+    close(): boolean {
+        this.wsClient?.close();
+        return true;
+    }
+}
+class VerusdWebLocalServer implements ServerInterface, ZmqObjectProviderInterface {
     private zmqClient: ZmqClient;
     private httpServer: HttpServer;
     private wsServer: WsServer;
@@ -45,9 +110,9 @@ export class VerusdWeb implements ServerInterface {
 
     get zmq(): ZmqEventsHandlerProvider { return this.zmqEventsProvider; }
 
-    constructor(config: VerusdWebConfig) {
-        this.daemonConfig = config.daemonConfig;
-        this.localServerConfig = config.localServerConfig;
+    constructor(config: VerusdLocalConfig) {
+        this.daemonConfig = config.daemon;
+        this.localServerConfig = config.localServer;
         this.wsServer = new WsServer();
         this.zmqEventsProvider = new ZmqEventsHandlerProvider(this.wsServer);
 
@@ -60,23 +125,23 @@ export class VerusdWeb implements ServerInterface {
             zmqEventsHandler
         );
 
-        this.customApiRoutes = (config.localServerConfig.customApiRoutes !== undefined)? config.localServerConfig.customApiRoutes : [];
-        this.clientHooks = (config.localServerConfig.ws?.clientHooks !== undefined)? config.localServerConfig.ws.clientHooks : []
+        this.customApiRoutes = (config.localServer.customApiRoutes !== undefined)? config.localServer.customApiRoutes : [];
+        this.clientHooks = (config.localServer.ws?.clientHooks !== undefined)? config.localServer.ws.clientHooks : []
 
         this.httpServer = new HttpServer({
             port: this.localServerConfig.port,
             wsServer: this.wsServer,
             clientHooks: this.clientHooks,
             customApiRoutes: this.customApiRoutes,
-            apiToken: config.localServerConfig.apiToken ?? ''
+            apiToken: config.localServer.apiToken ?? ''
         });
 
-        this.initDaemonRpcConnection(config?.localServerConfig.excludedMethods ?? []);
+        this.initDaemonRpcConnection(config?.localServer.excludedMethods ?? []);
     }
 
     open(): ServerInterface {
-        this.httpServer.open();
-        this.zmqClient.connect();
+        this.httpServer?.open();
+        this.zmqClient?.connect();
         return this;
     }
 
@@ -90,7 +155,6 @@ export class VerusdWeb implements ServerInterface {
         const host = (this.daemonConfig.port === undefined) ?
             this.daemonConfig.host :
             `${this.daemonConfig.host}:${this.daemonConfig.port}`;
-
         RpcServiceConfig.set(excludedMethods);
         RpcService.init(host, 'Basic ' + btoa(`${this.daemonConfig.user}:${this.daemonConfig.password}`));
     }

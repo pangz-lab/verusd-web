@@ -1,7 +1,7 @@
 import type { EventData, SubscriptionEventsHandler } from "verus-zmq-client";
 import { WsServer } from "./WsServer";
 
-type CustomReceivedEventCallback = (value: EventData, topic?: string, result?: Object, wsServer?: WsServer) => Object;
+type CustomReceivedEventCallback = (value: EventData, topic?: string, result?: Object, prettyData?: Object, wsServer?: WsServer) => Object;
 
 class CustomEventsManager {
     private static events: CustomReceivedEventCallback[] = [];
@@ -27,7 +27,6 @@ class CustomEventsManager {
         return CustomEventsManager.events[index];
     }
 }
-
 export class ZmqEventsHandlerProvider {
     private events: CustomReceivedEventCallback[] = [];
     constructor(private wsServer?: WsServer) {
@@ -61,30 +60,34 @@ export class ZmqEventsHandlerProvider {
 
     get eventsHandler(): SubscriptionEventsHandler {
         return {
-            onHashBlockReceived: function (value: EventData, topic?: string, result?: Object): Object {
+            onHashBlockReceived: function (value: EventData, topic?: string, result?: Object, prettyData?: Object): Object {
                 if(CustomEventsManager.get(0) != undefined) {
-                    CustomEventsManager.get(0)!(value, topic, result, CustomEventsManager.wsGet());
+                    CustomEventsManager.get(0)!(value, topic, result, prettyData, CustomEventsManager.wsGet());
                 }
                 return {};
             },
-            onHashTxReceived: function (value: EventData, topic?: string, result?: Object): Object {
+            onHashTxReceived: function (value: EventData, topic?: string, result?: Object, prettyData?: Object): Object {
                 if(CustomEventsManager.get(1) != undefined) {
-                    CustomEventsManager.get(1)!(value, topic, result, CustomEventsManager.wsGet());
+                    CustomEventsManager.get(1)!(value, topic, result, prettyData, CustomEventsManager.wsGet());
                 }
                 return {};
             },
-            onRawBlockReceived: function (value: EventData, topic?: string, result?: Object): Object {
+            onRawBlockReceived: function (value: EventData, topic?: string, result?: Object, prettyData?: Object): Object {
                 if(CustomEventsManager.get(2) != undefined) {
-                    CustomEventsManager.get(2)!(value, topic, result, CustomEventsManager.wsGet());
+                    CustomEventsManager.get(2)!(value, topic, result, prettyData, CustomEventsManager.wsGet());
                 }
                 return {};
             },
-            onRawTxReceived: function (value: EventData, topic?: string, result?: Object): Object {
+            onRawTxReceived: function (value: EventData, topic?: string, result?: Object, prettyData?: Object): Object {
                 if(CustomEventsManager.get(3) != undefined) {
-                    CustomEventsManager.get(3)!(value, topic, result, CustomEventsManager.wsGet());
+                    CustomEventsManager.get(3)!(value, topic, result, prettyData, CustomEventsManager.wsGet());
                 }
                 return {};
             },
         };
     }
+}
+
+export interface ZmqObjectProviderInterface {
+    zmq: ZmqEventsHandlerProvider
 }

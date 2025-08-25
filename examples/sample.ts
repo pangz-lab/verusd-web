@@ -24,18 +24,20 @@ class CustomClientHook2 implements ClientMessageHookInterface {
 }
 
 const proxy = new VerusdWeb({
-    daemonConfig: {
-        host: 'localhost',
-        port: 27486,
-        user: 'user',
-        password: 'password',
-        zmq: { host: 'localhost', port: 8900 }
-    },
-    localServerOptions: {
-        port: 3333,
-        excludedMethods: ['getblock'],
-        ws: {
-            clientHooks: [ new CustomClientHook(), new CustomClientHook2() ]
+    config: {
+        daemon: {
+            host: 'localhost',
+            port: 27486,
+            user: 'user',
+            password: 'password',
+            zmq: { host: 'localhost', port: 8900 }
+        },
+        localServer: {
+            port: 3333,
+            excludedMethods: ['getblock'],
+            ws: {
+                clientHooks: [ new CustomClientHook(), new CustomClientHook2() ]
+            }
         }
     },
 });

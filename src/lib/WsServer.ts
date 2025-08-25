@@ -49,7 +49,7 @@ export class WsServer
 
     close(): boolean {
         try {
-            this.wss!.clients.forEach(function each(client) { client.close();});
+            this.wss!.clients.forEach(function each(client) { client.close(); });
             this.wss!.close();
             return true;
         } catch (e) {
