@@ -1,3 +1,4 @@
+import type { EventData, SubscriptionEventsHandler } from "verus-zmq-client";
 import { ServerInterface } from "./ServerInterface";
 import { HttpServer, type ClientMessageHookInterface } from "./HttpServer";
 import { ZmqClient } from "./ZmqClient";
@@ -5,8 +6,8 @@ import { WsServer } from "./WsServer";
 import { ZmqEventsHandlerProvider, type ZmqObjectProviderInterface } from "./ZmqEventsHandlerProvider";
 import { RpcService } from "./RpcService";
 import { RpcServiceConfig } from "./RpcServiceConfig";
-import type { RouteConfig } from "./RestApiRoutesService";
 import { WsClient } from "./WsClient";
+import type { RouteConfig } from "./RestApiRoutesService";
 
 interface ZmqServer {
     host: string,
@@ -31,7 +32,8 @@ interface DaemonConfig {
 
 export interface VerusdLocalConfig {
     daemon: DaemonConfig
-    localServer: LocalServerConfig
+    localServer: LocalServerConfig,
+    useCustomDaemonEventHandlers?: boolean,
 }
 
 export interface VerusdProxyConfig {
@@ -98,6 +100,7 @@ class VerusdWebProxyServer implements ServerInterface {
         return true;
     }
 }
+
 class VerusdWebLocalServer implements ServerInterface, ZmqObjectProviderInterface {
     private zmqClient: ZmqClient;
     private httpServer: HttpServer;
@@ -107,21 +110,29 @@ class VerusdWebLocalServer implements ServerInterface, ZmqObjectProviderInterfac
     private clientHooks: ClientMessageHookInterface[] = [];
     private customApiRoutes: RouteConfig[] = [];
     private zmqEventsProvider: ZmqEventsHandlerProvider;
+    private useCustomDaemonEventHandlers: boolean = false;
 
-    get zmq(): ZmqEventsHandlerProvider { return this.zmqEventsProvider; }
+    get zmq(): ZmqEventsHandlerProvider {
+        if(!this.useCustomDaemonEventHandlers) {
+            throw new Error("ZMQ Event Handlers are not exposed. Set 'useCustomDaemonEventHandlers' to true in the configuration to enable this feature.");
+        }
+        return this.zmqEventsProvider;
+    }
 
     constructor(config: VerusdLocalConfig) {
         this.daemonConfig = config.daemon;
         this.localServerConfig = config.localServer;
+        this.useCustomDaemonEventHandlers = config.useCustomDaemonEventHandlers === true;
         this.wsServer = new WsServer();
         this.zmqEventsProvider = new ZmqEventsHandlerProvider(this.wsServer);
 
-        const zmqEventsHandler = this.zmqEventsProvider.eventsHandler;
+        const zmqEventsHandler = (this.useCustomDaemonEventHandlers)? 
+            this.zmqEventsProvider.eventsHandler :
+            this.getDefaultDaemonEventHandler();
 
         this.zmqClient = new ZmqClient(
             this.daemonConfig.zmq.host,
             this.daemonConfig.zmq.port,
-            this.wsServer,
             zmqEventsHandler
         );
 
@@ -157,5 +168,62 @@ class VerusdWebLocalServer implements ServerInterface, ZmqObjectProviderInterfac
             `${this.daemonConfig.host}:${this.daemonConfig.port}`;
         RpcServiceConfig.set(excludedMethods);
         RpcService.init(host, 'Basic ' + btoa(`${this.daemonConfig.user}:${this.daemonConfig.password}`));
+    }
+
+    private getDefaultDaemonEventHandler(): SubscriptionEventsHandler {
+        const wss = this.wsServer;        
+        return {
+            onHashBlockReceived: async function (value: EventData): Promise<Object> {
+                console.log("📢 onHashBlockReceived >>" + value);
+                if(value === undefined) {
+                    console.info("onHashBlockReceived value is undefined");
+                    return {};
+                }
+
+                wss.send(new DaemonDataMessage('RAW', 'block', value).toString());
+                const v = await RpcService.sendChainRequest('getblock', [value]);
+                wss.send(new DaemonDataMessage('PROC', 'block', v).toString());
+                
+                return {};
+            },
+            onHashTxReceived: async function (value: EventData): Promise<Object> {
+                console.log("📢 onHashTxReceived >>" + value);
+                if(value === undefined) {
+                    console.info("onHashTxReceived value is undefined");
+                    return {};
+                }
+
+                wss.send(new DaemonDataMessage('RAW', 'tx', value).toString());
+                const tx = await RpcService.sendChainRequest('getrawtransaction', [value]);
+                const v = await RpcService.sendChainRequest('decoderawtransaction', [tx.result]);
+                wss.send(new DaemonDataMessage('PROC', 'tx', v).toString());
+                
+                return {};
+            }
+        };
+    }
+}
+
+class DaemonDataMessage {
+    private contentType: string;
+    private source: string;
+    private data: any;
+
+    constructor(
+        contentType: 'RAW' | 'PROC',
+        src: 'tx' | 'block',
+        d: any
+    ) {
+        this.contentType = contentType;
+        this.source = src;
+        this.data = d;
+    }
+
+    toString(): object {
+        return {
+            contentType: this.contentType,
+            src: this.source,
+            d: this.data
+        };
     }
 }

@@ -18,13 +18,13 @@ export class WsServer
         noServer: true,
         perMessageDeflate: {
             zlibDeflateOptions: {
-            // See zlib defaults.
-            chunkSize: 1024,
-            memLevel: 7,
-            level: 3
+                // See zlib defaults.
+                chunkSize: 1024,
+                memLevel: 7,
+                level: 3
             },
             zlibInflateOptions: {
-            chunkSize: 10 * 1024
+                chunkSize: 10 * 1024
             },
             // Other options settable:
             clientNoContextTakeover: true, // Defaults to negotiated value.
@@ -34,10 +34,9 @@ export class WsServer
             concurrencyLimit: 10, // Limits zlib concurrency for perf.
             threshold: 1024 // Size (in bytes) below which messages
             // should not be compressed if context takeover is disabled.
-        }
-    }) {
-        this.config = config;
-    }
+        },
+        maxPayload: 2 * 1024 * 1024//2MB
+    }) { this.config = config; }
 
     get socket(): WebSocketServer | undefined { return this.wss; }
 
@@ -69,7 +68,10 @@ export class WsServer
 
         this.connectionCheckerInterval = setInterval(function() {
             wss.clients.forEach(function each(ws) {
-                if (ws.readyState !== WebSocket.OPEN) { return ws.terminate(); }
+                if (ws.readyState !== WebSocket.OPEN) {
+                    console.log(`Closing a dead connection ...`);
+                    return ws.terminate();
+                }
             });
         }, this.defaultEventsConfig.intervalCheckInSec);
     }

@@ -1,16 +1,13 @@
 import {
-    EventData,
     SubscriptionEventsHandler,
     SubscriptionTopics,
     VerusZmqClient,
     VerusZmqConnection,
     VerusZmqOptions
 } from "verus-zmq-client";
-import { WsServer } from "./WsServer";
 
 export class ZmqClient {
     private client?: VerusZmqClient;
-    private wsServer: WsServer;
     private host: string;
     private port: number;
     private eventHandler: SubscriptionEventsHandler;
@@ -18,15 +15,11 @@ export class ZmqClient {
     constructor(
         host: string,
         port: number,
-        wsServer: WsServer,
-        eventHandler?: SubscriptionEventsHandler,
+        eventHandler: SubscriptionEventsHandler,
     ) {
         this.host = host;
         this.port = port;
-        this.wsServer = wsServer;
-        this.eventHandler = (eventHandler == null)? 
-            this.getDefaultEventHandler() :
-            eventHandler
+        this.eventHandler = eventHandler
     }
 
     connect(): void {
@@ -55,16 +48,5 @@ export class ZmqClient {
 
     disconnect(): void {
         if(this.client != undefined) { this.client.disconnect(); }
-    }
-
-    private getDefaultEventHandler(): SubscriptionEventsHandler {
-        const wss = this.wsServer;        
-        return {
-            onHashBlockReceived: async function (value: EventData): Promise<Object> {
-                console.log("📢 onHashBlockReceived >>" + value);
-                if(value != undefined) { wss.send(value); }
-                return {};
-            }
-        };
     }
 }

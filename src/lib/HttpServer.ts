@@ -27,7 +27,7 @@ export class HttpServer implements ServerInterface {
     private clientHookInterface: ClientMessageHookInterface[] = [];
     private customApiRoutes: RouteConfig[] = [];
     private apiToken = '';
-    private readonly wsSuffix = 'verusd/web';
+    private readonly wsSuffix = '/verusd/web';
 
     constructor(config: HttpServerConfig) {
         this.port = config.port;
@@ -72,7 +72,7 @@ export class HttpServer implements ServerInterface {
         httpServer.on('upgrade', (request, socket, head) => {
             const pathname = request.url;
 
-            if (pathname === `/${this.wsSuffix}`) {
+            if (pathname === `${this.wsSuffix}`) {
                 wss.handleUpgrade(request, socket, head, function done(ws) {
                     ws.send(JSON.stringify({data: 'connection established'}));
                     
@@ -84,14 +84,19 @@ export class HttpServer implements ServerInterface {
                             return;
                         }
 
-                        const d = JSON.parse(convData);
-                        if(!RpcServiceConfig.getAllowedMethods().includes(d.m.trim())) {
-                            ws.send(JSON.stringify({result: 'unknown rest api method', error: true}));
+                        try {
+                            const d = JSON.parse(convData);
+                            if(!RpcServiceConfig.getAllowedMethods().includes(d.m.trim())) {
+                                ws.send(JSON.stringify({result: 'unknown rest api method', error: true}));
+                                return;
+                            }
+
+                            RpcService.sendChainRequest(d.m, d.p)
+                            .then((v) => { ws.send(JSON.stringify(v)); });
+                        } catch (e) {
+                            ws.send(JSON.stringify({result: 'invalid json format', error: true}));
                             return;
                         }
-
-                        RpcService.sendChainRequest(d.m, d.p)
-                        .then((v) => { ws.send(JSON.stringify(v)); });
                     });
 
                     ws.on('error', console.error);

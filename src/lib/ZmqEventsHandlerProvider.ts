@@ -1,7 +1,13 @@
 import type { EventData, SubscriptionEventsHandler } from "verus-zmq-client";
 import { WsServer } from "./WsServer";
 
-type CustomReceivedEventCallback = (value: EventData, topic?: string, result?: Object, prettyData?: Object, wsServer?: WsServer) => Object;
+type CustomReceivedEventCallback = (
+    value: EventData,
+    topic?: string,
+    result?: Object,
+    prettyData?: Object,
+    wsServer?: WsServer
+) => Object;
 
 class CustomEventsManager {
     private static events: CustomReceivedEventCallback[] = [];
@@ -27,6 +33,7 @@ class CustomEventsManager {
         return CustomEventsManager.events[index];
     }
 }
+
 export class ZmqEventsHandlerProvider {
     private events: CustomReceivedEventCallback[] = [];
     constructor(private wsServer?: WsServer) {
